@@ -24,7 +24,7 @@ $(function() {
 
     $("#projectList").change(function () {
 
-        $.post("", {}, function () {
+        $.post("beginDownload", {"pid": $("#projectList").val()}, function (data) {
 
         })
 

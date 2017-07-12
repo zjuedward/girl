@@ -38,9 +38,9 @@ public class HelloController {
 
     @Value("${application.hello}")
     private String hello;
-    @Value("{application.node_sjwjjl}")
+    @Value("${application.node_sjwjjl}")
     private String node_sjwjjl;
-    @Value("{application.node_tz}")
+    @Value("${application.node_tz}")
     private String node_tz;
 
     @ApiOperation(value="和屠美人打招呼", notes="")
@@ -74,9 +74,12 @@ public class HelloController {
         return null;
     }
 
+    @RequestMapping(value = "/beginDownload")
     public String beginDownload(@RequestParam long pid) {
         // 方案设计、初步设计、施工图设计，值放于springboot配置文件中
-        String[] phaseArray = {};
+        String[] phaseArray = {"方案设计", "初步设计", "施工图设计"};
+
+        int count = 0;
 
         for (int i = 0; i < phaseArray.length; i ++) {
             // 阶段列表
@@ -85,7 +88,7 @@ public class HelloController {
             // 存在
             if (phaseList != null && phaseList.size() > 0) {
                 // 子项列表
-                List<Doctree> itemList = doctreeService.findBySql("select * from doctree where parentid = ? and nodetype = 3",
+                List<Doctree> itemList = doctreeService.findBySql("select * from doctree where parentid = ?",
                         new Object[] {phaseList.get(0).getMainid()});
                 // 遍历每个子项
                 for (int j = 0; j < itemList.size(); j ++) {
@@ -103,6 +106,31 @@ public class HelloController {
                                     new Object[] {tzList.get(0).getMainid()});
                             if (majorList != null && majorList.size() > 0) {
                                 // 遍历每个专业
+                                for (int k = 0; k < majorList.size(); k ++) {
+                                    // 获取每个专业节点下的图纸节点
+                                    List<Doctree> drawingList = doctreeService.findBySql("select * from doctree where parentid = ?",
+                                            new Object[] {majorList.get(k).getMainid()});
+
+                                    for (int t = 0; t < drawingList.size(); t ++) {
+                                        List<DocDrawing> fileInfoList = docDrawingService.findBySql("select * from doc_drawing where versioncommonid = ?",
+                                                new Object[] {drawingList.get(t).getMainid()});
+
+                                        for (int p = 0; p < fileInfoList.size(); p ++) {
+                                            // 下载对应文件，如归档文件、底图归档文件、plt文件等
+                                            try {
+                                                File file = DownloadFile.downloadFile(Integer.parseInt(fileInfoList.get(p).getReservenumber().replace("$", "")),
+                                                        new File("H:\\zxwtjq\\"));
+                                                count ++;
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
+                                            } catch (HttpDowloadFile httpDowloadFile) {
+                                                httpDowloadFile.printStackTrace();
+                                            }
+                                        }
+
+                                    }
+
+                                }
                             }
                         }
 
@@ -112,7 +140,7 @@ public class HelloController {
         }
 
 
-        return "";
+        return "all files: " + count;
 
     }
 
