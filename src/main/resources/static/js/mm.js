@@ -24,8 +24,8 @@ $(function() {
 
     $("#projectList").change(function () {
 
-        $.post("beginDownload", {"pid": $("#projectList").val()}, function (data) {
-
+        $.post("beginDownload", {"pid": $("#projectList").val(), "pname": $("#projectList").find("option:selected").text()}, function (data) {
+            alert(data);
         })
 
     });
