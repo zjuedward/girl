@@ -34,6 +34,7 @@ class DoctreeRowMapper implements RowMapper<Doctree> {
         doctree.setNodename(rs.getString("nodename"));
         doctree.setNodetype(rs.getInt("nodetype"));
         doctree.setParentid(rs.getLong("parentid"));
+        doctree.setAncestor(rs.getString("ancestor"));
 
         return doctree;
     }

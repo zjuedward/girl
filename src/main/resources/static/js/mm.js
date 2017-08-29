@@ -22,9 +22,14 @@ $(function() {
         $("#projectList").append(appendHtml);
     });
 
-    $("#projectList").change(function () {
+    $("#findProjectBtn").click(function () {
 
-        $.post("beginDownload", {"pid": $("#projectList").val(), "pname": $("#projectList").find("option:selected").text()}, function (data) {
+        if ($("#projectList").val() == "") {
+            alert("请选择一个工程");
+            return false;
+        }
+
+        $.post("q555", {"pid": $("#projectList").val(), "pname": $("#projectList").find("option:selected").text()}, function (data) {
             alert(data);
         })
 

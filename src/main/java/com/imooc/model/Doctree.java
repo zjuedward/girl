@@ -13,14 +13,17 @@ public class Doctree {
 
     private Integer nodetype;
 
+    private String ancestor;
+
     public Doctree() {
     }
 
-    public Doctree(Long mainid, String nodename, Long parentid, Integer nodetype) {
+    public Doctree(Long mainid, String nodename, Long parentid, Integer nodetype, String ancestor) {
         this.mainid = mainid;
         this.nodename = nodename;
         this.parentid = parentid;
         this.nodetype = nodetype;
+        this.ancestor = ancestor;
     }
 
     public Long getMainid() {
@@ -29,6 +32,14 @@ public class Doctree {
 
     public void setMainid(Long mainid) {
         this.mainid = mainid;
+    }
+
+    public String getAncestor() {
+        return ancestor;
+    }
+
+    public void setAncestor(String ancestor) {
+        this.ancestor = ancestor;
     }
 
     public String getNodename() {

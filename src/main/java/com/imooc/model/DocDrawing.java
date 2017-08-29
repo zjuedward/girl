@@ -8,61 +8,68 @@ public class DocDrawing {
     private Long common_id;
 
     private Long parentid;
-
+    // 图纸编号
     private String picnumber;
-
+    // 图纸名称
     private String picname;
-
+    // 版次
     private String version;
 
     private String reservenumber;
 
     private String annex;
-
+    // 绘图人
     private String editor;
-
+    // 校对人
     private String collator;
-
+    // 审核人
     private String auditor;
-
+    // 审定人
     private String reader;
-
+    // 工程负责人
     private String itemperson;
-
+    // 专业负责人
     private String specialperson;
-
+    // 项目编号
     private String projectnumber;
-
+    // 工程名称
     private String projectname;
-
+    // 项目名称
     private String itemname;
-
+    // 出图日期
     private String phdate;
-
+    // 设计人
     private String creator;
-
+    // 归档日期
     private String guidangdate;
 
     private Long pltid;
 
     private Long dituzbr;
-
+    // 设计总负责人
     private String designmater;
-
+    // 专业名称
     private String specname;
-
+    // 阶段名称
     private String phrasename;
-
+    // 工程编号
     private String projectnumber1;
 
     private String barcode;
-
+    // 图幅
     private String convertpapertype;
+
+    private String path;
 
     public DocDrawing() {
     }
 
-    public DocDrawing(Long common_id, Long parentid, String picnumber, String picname, String version, String reservenumber, String annex, String editor, String collator, String auditor, String reader, String itemperson, String specialperson, String projectnumber, String projectname, String itemname, String phdate, String creator, String guidangdate, Long pltid, Long dituzbr, String designmater, String specname, String phrasename, String projectnumber1, String barcode, String convertpapertype) {
+    public DocDrawing(Long common_id, Long parentid, String picnumber, String picname, String version,
+                      String reservenumber, String annex, String editor, String collator, String auditor,
+                      String reader, String itemperson, String specialperson, String projectnumber, String projectname,
+                      String itemname, String phdate, String creator, String guidangdate, Long pltid,
+                      Long dituzbr, String designmater, String specname, String phrasename, String projectnumber1,
+                      String barcode, String convertpapertype, String path) {
         this.common_id = common_id;
         this.parentid = parentid;
         this.picnumber = picnumber;
@@ -90,6 +97,7 @@ public class DocDrawing {
         this.projectnumber1 = projectnumber1;
         this.barcode = barcode;
         this.convertpapertype = convertpapertype;
+        this.path = path;
     }
 
 
@@ -125,6 +133,14 @@ public class DocDrawing {
                 ", barcode='" + barcode + '\'' +
                 ", convertpapertype='" + convertpapertype + '\'' +
                 '}';
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public String getBarcode() {

@@ -4,6 +4,7 @@ import com.imooc.model.DocDrawing;
 import com.imooc.model.Doctree;
 import com.imooc.service.DocDrawingService;
 import com.imooc.service.DoctreeService;
+import com.imooc.util.ExcelUtil;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import net.devin.util.http.DownloadFile;
@@ -42,6 +43,10 @@ public class HelloController {
     private String node_sjwjjl;
     @Value("${application.node_tz}")
     private String node_tz;
+    @Value("${application.download_path}")
+    private String download_path;
+    @Value("${application.is_write_excel}")
+    private String is_write_excel;
 
     @ApiOperation(value="和屠美人打招呼", notes="")
     @RequestMapping(value = "/hello", method = RequestMethod.GET)
@@ -61,8 +66,9 @@ public class HelloController {
 
     @RequestMapping(value = "/findProjectInfo")
     public List<Doctree> findProjectInfo() {
+
         // 2017年
-        List<Doctree> list = doctreeService.findBySql("select * from doctree where nodename = ?", new Object[] {"2017年"});
+        List<Doctree> list = doctreeService.findBySql("select * from doctree where nodename like '%2017%' and nodetype = 10", null);
         if (list != null && list.size() > 0) {
             // 拿到年节点的mainid
             long mid = list.get(0).getMainid();
@@ -74,10 +80,109 @@ public class HelloController {
         return null;
     }
 
+
+
+    @RequestMapping(value = "q555")
+    public String q555(@RequestParam long pid, @RequestParam String pname) {
+
+        //List<Doctree> itemList = doctreeService.findBySql("select * from doctree where ancestor like ?",
+        //        new Object[]{"%" + pid + "%"});
+
+        int count = 0;
+
+        String yearroot = "";
+
+        // 2017年
+        List<Doctree> list = doctreeService.findBySql("select * from doctree where nodename like '%2017%' and nodetype = 10", null);
+        if (list != null && list.size() > 0) {
+            yearroot = list.get(0).getNodename();
+        }
+
+        List<Doctree> rootpathList = doctreeService.findBySql("select * from doctree where mainid = ?",
+                new Object[]{pid});
+
+        String root = "";
+
+        if (rootpathList.size() != 0) {
+            root = download_path + "\\" + yearroot + "\\" + rootpathList.get(0).getNodename();
+        }
+
+        // 图纸节点
+        List<Doctree> drawingList = doctreeService.findBySql("select * from doctree where ancestor like ? and nodetype = ?",
+                new Object[]{"%" + pid + "%", 5});
+
+        List<DocDrawing> allFileInfoList = new ArrayList<>();
+
+        for (int t = 0; t < drawingList.size(); t++) {
+
+            List<DocDrawing> fileInfoList = docDrawingService.findBySql("select * from doc_drawing where versioncommonid = ?",
+                    new Object[]{drawingList.get(t).getMainid()});
+
+
+
+            StringBuilder folderpath = new StringBuilder();
+            folderpath.append(download_path);
+            String[] parts = drawingList.get(t).getAncestor().split("\\$");
+            for (int qq = 2; qq < parts.length; qq++) {
+                List<Doctree> pathlist = doctreeService.findBySql("select * from doctree where mainid = ?",
+                        new Object[]{Long.parseLong(parts[qq])});
+                if (pathlist.size() != 0) {
+                    folderpath.append(pathlist.get(0).getNodename());
+                    folderpath.append("\\");
+                }
+            }
+
+            for (int kk = 0; kk < fileInfoList.size(); kk ++) {
+                fileInfoList.get(kk).setPath(folderpath.toString());
+            }
+
+            allFileInfoList.addAll(fileInfoList);
+
+            // 建立文件夹
+            File pfile = new File(folderpath.toString());
+            //System.out.println("fuck: " + folderpath.toString());
+            if (!pfile.exists()) {
+
+                if (!pfile.mkdirs()) {
+                    System.out.println("创建目标文件所在目录失败！");
+                    //return false;
+                }
+            }
+
+            for (int p = 0; p < fileInfoList.size(); p++) {
+                // 下载对应文件，如归档文件、底图归档文件、plt文件等
+                try {
+                    // 下载文件
+
+                    File file = DownloadFile.downloadFile(Integer.parseInt(fileInfoList.get(p).getReservenumber().replace("$", "")),
+                            new File(folderpath.toString()));
+                    count++;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (HttpDowloadFile httpDowloadFile) {
+                    httpDowloadFile.printStackTrace();
+                }
+            }
+
+        }
+
+        if (is_write_excel.equals("yes")) {
+            ExcelUtil.createExcelFile(root + ".xlsx");
+            // 写图纸信息
+            ExcelUtil.writeExcel(allFileInfoList, 21, root + ".xlsx");
+        }
+
+
+
+        return "all files:" + count;
+
+    }
+
+
     @RequestMapping(value = "/beginDownload")
     public String beginDownload(@RequestParam long pid, @RequestParam String pname) {
         // 方案设计、初步设计、施工图设计，值放于springboot配置文件中
-        String[] phaseArray = {"方案设计", "初步设计", "施工图设计"};
+        //String[] phaseArray = {"方案设计", "初步设计", "施工图设计"};
 
         int count = 0;
 
@@ -85,22 +190,22 @@ public class HelloController {
         StringBuilder sb_item = new StringBuilder();
         StringBuilder sb_major = new StringBuilder();
 
-        for (int i = 0; i < phaseArray.length; i ++) {
+        //for (int i = 0; i < phaseArray.length; i ++) {
             // 路径
             sb_path = new StringBuilder();
-            sb_path.append("H:\\zxwtjq\\");
+            sb_path.append(download_path);
             sb_path.append(pname);
             sb_path.append("\\");
             // 阶段列表
-            List<Doctree> phaseList = doctreeService.findBySql("select * from doctree where parentid = ? and nodename = ?",
-                    new Object[] {pid, phaseArray[i]});
+            //List<Doctree> phaseList = doctreeService.findBySql("select * from doctree where parentid = ? and nodename = ?",
+            //        new Object[] {pid, phaseArray[i]});
             // 存在
-            if (phaseList != null && phaseList.size() > 0) {
-                sb_path.append(phaseList.get(0).getNodename());
+            //if (phaseList != null && phaseList.size() > 0) {
+                //sb_path.append(phaseList.get(0).getNodename());
                 sb_path.append("\\");
                 // 子项列表
                 List<Doctree> itemList = doctreeService.findBySql("select * from doctree where parentid = ?",
-                        new Object[] {phaseList.get(0).getMainid()});
+                        new Object[] {pid});
                 // 遍历每个子项
                 for (int j = 0; j < itemList.size(); j ++) {
                     sb_item = new StringBuilder();
@@ -144,16 +249,30 @@ public class HelloController {
                                         }
                                     }
 
+                                    List<DocDrawing> allFileInfoList = new ArrayList<DocDrawing>();
+
                                     for (int t = 0; t < drawingList.size(); t ++) {
                                         List<DocDrawing> fileInfoList = docDrawingService.findBySql("select * from doc_drawing where versioncommonid = ?",
                                                 new Object[] {drawingList.get(t).getMainid()});
 
+                                        allFileInfoList.addAll(fileInfoList);
+                                        // 下载前先删除
+                                        /*File tempdir = new File(sb_major.toString());
+                                        if (tempdir.exists()) {
+                                            File[] files = tempdir.listFiles();
+                                            for (int q = 0; q < files.length; q ++) {
+                                                files[q].delete();
+                                            }
+                                        }*/
+
+                                        //File infofile = new File(sb_major.toString() + "info.xls");
+
+
                                         for (int p = 0; p < fileInfoList.size(); p ++) {
                                             // 下载对应文件，如归档文件、底图归档文件、plt文件等
                                             try {
-                                                // 写图纸信息
-
                                                 // 下载文件
+
                                                 File file = DownloadFile.downloadFile(Integer.parseInt(fileInfoList.get(p).getReservenumber().replace("$", "")),
                                                         new File(sb_major.toString()));
                                                 count ++;
@@ -166,17 +285,21 @@ public class HelloController {
 
                                     }
 
+                                    ExcelUtil.createExcelFile(sb_major.toString() + "info.xlsx");
+                                    // 写图纸信息
+                                    ExcelUtil.writeExcel(allFileInfoList, 20, sb_major.toString() + "info.xlsx");
+
                                 }
                             }
                         }
 
                     }
                 }
-            }
-        }
+            //}
+        //}
 
 
-        return "all files: " + count;
+        return "all files number: " + count;
 
     }
 
@@ -193,7 +316,7 @@ public class HelloController {
 
             // 下载对应文件，如归档文件、底图归档文件、plt文件等
             File file = DownloadFile.downloadFile(Integer.parseInt(drawingList.get(0).getReservenumber().replace("$", "")),
-                    new File("H:\\zxwtjq\\"));
+                    new File(download_path));
 
             return drawingList.get(0).toString();
         } else {
